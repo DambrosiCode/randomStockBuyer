@@ -1,4 +1,4 @@
-from datetime import datetime as dt
+from datetime import datetime
 from datetime import timedelta, date
 
 import numpy
@@ -11,7 +11,6 @@ import pickle
 from tqdm import tqdm
 class Trader():
     def __init__(self, cash, stocks_owned, time_frame=None, redown=False):
-        super().__init__()
         """params:
         cash(int) = cash on hand to buy stock
         stocks_owned(array) = ticker names of stocks currently owned
@@ -24,8 +23,8 @@ class Trader():
 
         if time_frame is not None:
             time = time_frame
-            self.time_frame[0] = dt(time[0][0], time[0][2], time[0][2])
-            self.time_frame[1] = dt(time[1][0], time[1][1], time[1][2])
+            self.time_frame[0] = datetime(time[0].year, time[0].month, time[0].day)
+            self.time_frame[1] = datetime(time[1].year, time[1].month, time[1].day)
             # set the first day of transactions
             self.first_day = self.time_frame[0]
         else:
@@ -59,7 +58,7 @@ class Trader():
     def netWorth(self, date):
         netWorth = self.cash
         for stock in self.stocks_owned:
-            stock_value = self.stock_data[stock]['Close'][date] * self.stocks_owned[stock]
+            stock_value = self.stock_data[stock]['Close'].loc[date] * self.stocks_owned[stock]
             netWorth = netWorth + stock_value
         return netWorth
 
@@ -93,17 +92,18 @@ class Trader():
         # buy shares at a given time at market value
         if date_exact:  # if true, will only buy stocks with date chosen is exact
             try:
-                share_cost = self.stock_data[stocks_buying]['Open'].loc[purchaseDate]
+                share_cost = self.stock_data[stocks_buying].loc[purchaseDate]['Open']
                 cost = shares_buying * share_cost
-                joe.buyNewStock(stocks_buying, cost, shares_buying)
+                self.buyNewStock(stocks_buying, cost, shares_buying)
             except KeyError:
                 pass
                 #print('markets not opened today for: ' + stocks_buying)
+                #print(purchaseDate)
         else:
             purchaseDate = self.getClosestDate(stocks_buying, purchaseDate)
-            share_cost = self.stock_data[stocks_buying]['Open'].loc[purchaseDate]
+            share_cost = self.stock_data[stocks_buying].loc[purchaseDate]['Open']
             cost = shares_buying * share_cost
-            joe.buyNewStock(stocks_buying, cost, shares_buying)
+            self.buyNewStock(stocks_buying, cost, shares_buying)
 
     def sellNewStock(self, symbol, cost, shares):
         #if selling more shares than owned
@@ -126,17 +126,17 @@ class Trader():
         # buy shares at a given time at market value
         if date_exact:  # if true, will only buy stocks with date chosen is exact
             try:
-                share_cost = self.stock_data[stocks_selling]['Close'].loc[sell_date]
+                share_cost = self.stock_data[stocks_selling].loc[sell_date]['Close']
                 cost = shares_selling * share_cost
-                joe.sellNewStock(stocks_selling, cost, shares_selling)
+                self.sellNewStock(stocks_selling, cost, shares_selling)
             except KeyError:
                 pass
                 #print('markets not opened today for: ' + stocks_selling)
         else:
             sell_date = self.getClosestDate(stocks_selling, sell_date)
-            share_cost = self.stock_data[stocks_selling]['Close'].loc[sell_date]
+            share_cost = self.stock_data[stocks_selling].loc[sell_date]['Close']
             cost = shares_selling * share_cost
-            joe.buyNewStock(stocks_selling, cost, shares_selling)
+            self.buyNewStock(stocks_selling, cost, shares_selling)
 
 
     def getClosestDate(self, ticker, test_date):
@@ -144,56 +144,6 @@ class Trader():
         test_date_list = self.stock_data[ticker].index
         closest_time = min(test_date_list, key=lambda sub: abs(sub - test_date))
         return closest_time
-
-
-<<<<<<< HEAD
-
-
-
-
-=======
-def randStockBuyer(trader_class, iter):
-    #randomly buy and sell stock for one month 100 times
-    funds = []
-    for i in tqdm(range(0,iter-1)):
-        trader = Trader(1000, {'ABC': 0},
-                     [[2020, 1, 3], [2022, 11, 21]])
-        # start trader out with one stock: ABC, and no shares (0)
-        # only buy shares between 2020 and today
-        for day in range(0,30):
-            #buy between 1 and 10 stocks randomly
-            stocks_to_move = randint(1,10)
-            buy_or_sell = randint(0,2)
-            #if 0 then buy
-            if buy_or_sell == 0:
-                trader.buyShare('ABC', stocks_to_move, trader.first_day + timedelta(day))
-            #if 1 then sell
-            elif buy_or_sell == 1:
-                trader.sellShare('ABC', stocks_to_move, trader.first_day + timedelta(day))
-            #otherwise do nothing
-            else:
-                pass
-        try:
-            funds.append(trader.netWorth(trader.first_day + timedelta(day)))
-        except:
-            pass
-    average_rand = numpy.mean(funds)
-    start_price = trader.stock_data['ABC']['Open'][trader.first_day]
-    end_price = trader.stock_data['ABC']['Close'][trader.first_day+timedelta(31)]
-    print(average_rand/1000)
-    print(end_price/start_price)
-    print(average_rand)
-    print(str(start_price) +' '+ str(end_price))
-
-
-
-joe = Trader(1000, {'ABC': 0, 'AAPL': 0},
-             [[2020, 1, 3], [2022, 11, 21]])
-
-print(joe.stock_data['AAPL'])
->>>>>>> 819359b6ca2d63daa92a51bcdc776f1d9cf53f81
-
-#randStockBuyer(joe, 99)
 
 # buy one share of ABC at the market value of the first day the markets were opened in 2020
 #joe.buyShare('ABC', 1, joe.first_day)
