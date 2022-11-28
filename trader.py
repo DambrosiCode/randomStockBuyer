@@ -36,8 +36,12 @@ class Trader():
         self.stock_data = dict()
         # read saved stock data
         self.readStockData()
-        # download any newly instantiated stock data
-        self.downloadStocksOwned(redown)
+        #if there is new time data
+        for stock in self.stocks_owned:
+            if self.stock_data[stock].index[0] != self.first_day or stock not in self.stock_data.keys() or redown:
+                # download any newly instantiated stock data
+                self.downloadStocksOwned(True)
+
         # save stock data to text file
         self.writeStockData()
 
